@@ -9,13 +9,15 @@ import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Scan, FileText, PlusCircle, Camera } from 'lucide-react';
+import { api } from '@/lib/api';
 
 interface AddItemModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onItemAdded?: () => void; // Callback to refresh data
 }
 
-export function AddItemModal({ open, onOpenChange }: AddItemModalProps) {
+export function AddItemModal({ open, onOpenChange, onItemAdded }: AddItemModalProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
     name: '',
@@ -23,15 +25,35 @@ export function AddItemModal({ open, onOpenChange }: AddItemModalProps) {
     category: '',
     expirationDate: '',
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleManualSubmit = (e: React.FormEvent) => {
+  const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock submission
-    console.log('Adding item:', { ...formData, expirationDate: selectedDate });
-    onOpenChange(false);
-    // Reset form
-    setFormData({ name: '', quantity: '', category: '', expirationDate: '' });
-    setSelectedDate(new Date());
+    if (!selectedDate || !formData.name || !formData.quantity || !formData.category) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await api.inventory.create({
+        name: formData.name,
+        quantity: formData.quantity,
+        category: formData.category,
+        expirationDate: selectedDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+      });
+      
+      onOpenChange(false);
+      onItemAdded?.(); // Refresh the data
+      
+      // Reset form
+      setFormData({ name: '', quantity: '', category: '', expirationDate: '' });
+      setSelectedDate(new Date());
+    } catch (error) {
+      console.error('Error adding item:', error);
+      // You could add error handling here
+    } finally {
+      setLoading(false);
+    }
   };
 
   const categories = [
@@ -144,8 +166,8 @@ export function AddItemModal({ open, onOpenChange }: AddItemModalProps) {
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
                   Cancel
                 </Button>
-                <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700">
-                  Add Item
+                <Button type="submit" disabled={loading} className="flex-1 bg-green-600 hover:bg-green-700">
+                  {loading ? 'Adding...' : 'Add Item'}
                 </Button>
               </div>
             </form>

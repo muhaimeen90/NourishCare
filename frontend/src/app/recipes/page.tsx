@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,16 +8,49 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Search, Clock, Users, ChefHat, Filter } from 'lucide-react';
-import { mockRecipes } from '@/lib/mock-data';
+import { api } from '@/lib/api';
 import { Navigation } from '@/components/Navigation';
 import { ChatBot } from '@/components/ChatBot';
 
+interface Recipe {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  cookTime: string;
+  servings: number;
+  difficulty: string;
+  ingredients: string[];
+  instructions: string[];
+  calories: number;
+}
+
 export default function Recipes() {
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState('all');
   const [selectedCookTime, setSelectedCookTime] = useState('all');
 
-  const filteredRecipes = mockRecipes.filter(recipe => {
+  useEffect(() => {
+    fetchRecipes();
+  }, []);
+
+  const fetchRecipes = async () => {
+    try {
+      setLoading(true);
+      const data = await api.recipes.getAll();
+      setRecipes(data);
+    } catch (err) {
+      setError('Failed to fetch recipes');
+      console.error('Error fetching recipes:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredRecipes = recipes.filter(recipe => {
     const matchesSearch = recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          recipe.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDifficulty = selectedDifficulty === 'all' || recipe.difficulty === selectedDifficulty;
@@ -37,6 +70,34 @@ export default function Recipes() {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading recipes...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <p className="text-red-600">{error}</p>
+            <Button onClick={fetchRecipes} className="mt-4">Try Again</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -214,24 +275,24 @@ export default function Recipes() {
               <h3 className="text-lg font-semibold mb-4">Recipe Collection Stats</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <div className="text-2xl font-bold text-green-600">{mockRecipes.length}</div>
+                  <div className="text-2xl font-bold text-green-600">{recipes.length}</div>
                   <div className="text-sm text-gray-600">Total Recipes</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-blue-600">
-                    {mockRecipes.filter(r => r.difficulty === 'Easy').length}
+                    {recipes.filter((r: Recipe) => r.difficulty === 'Easy').length}
                   </div>
                   <div className="text-sm text-gray-600">Easy Recipes</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-orange-600">
-                    {Math.round(mockRecipes.reduce((acc, r) => acc + parseInt(r.cookTime), 0) / mockRecipes.length)}
+                    {recipes.length > 0 ? Math.round(recipes.reduce((acc: number, r: Recipe) => acc + parseInt(r.cookTime), 0) / recipes.length) : 0}
                   </div>
                   <div className="text-sm text-gray-600">Avg Cook Time (min)</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-purple-600">
-                    {Math.round(mockRecipes.reduce((acc, r) => acc + r.calories, 0) / mockRecipes.length)}
+                    {recipes.length > 0 ? Math.round(recipes.reduce((acc: number, r: Recipe) => acc + r.calories, 0) / recipes.length) : 0}
                   </div>
                   <div className="text-sm text-gray-600">Avg Calories</div>
                 </div>

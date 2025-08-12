@@ -1,18 +1,50 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { Plus, AlertTriangle, TrendingUp, Leaf, DollarSign, Calendar, Package } from 'lucide-react';
-import { mockFoodItems, mockAnalyticsData } from '@/lib/mock-data';
+import { api } from '@/lib/api';
 import { AddItemModal } from '@/components/AddItemModal';
 import { ChatBot } from '@/components/ChatBot';
 import { Navigation } from '@/components/Navigation';
 
+interface FoodItem {
+  id: string;
+  name: string;
+  quantity: string;
+  expirationDate: string;
+  category: string;
+  daysUntilExpiration?: number;
+}
+
 export default function Dashboard() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchFoodItems();
+  }, []);
+
+  const fetchFoodItems = async () => {
+    try {
+      setLoading(true);
+      const data = await api.inventory.getAll();
+      // Calculate days until expiration for each item
+      const itemsWithDays = data.map((item: any) => ({
+        ...item,
+        daysUntilExpiration: Math.ceil((new Date(item.expirationDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+      }));
+      setFoodItems(itemsWithDays);
+    } catch (error) {
+      console.error('Error fetching food items:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getExpirationColor = (days: number) => {
     if (days >= 5) return 'expiration-green';
@@ -36,15 +68,25 @@ export default function Dashboard() {
     'Fish': '🐟',
   };
 
+  // Calculate analytics from actual data
+  const expiringSoonCount = foodItems.filter(item => item.daysUntilExpiration !== undefined && item.daysUntilExpiration <= 2).length;
+  const wasteReduced = 85; // This would come from actual tracking
+  
   const wasteData = [
-    { name: 'Food Saved', value: mockAnalyticsData.wasteReduced, fill: '#22c55e' },
+    { name: 'Food Saved', value: wasteReduced, fill: '#22c55e' },
     { name: 'Food Wasted', value: 15, fill: '#ef4444' },
   ];
 
-  const categoryData = mockAnalyticsData.wasteByCategory.map(item => ({
-    category: item.category,
-    saved: item.saved,
-    wasted: item.wasted,
+  // Group items by category for analytics
+  const categoryData = Object.entries(
+    foodItems.reduce((acc, item) => {
+      acc[item.category] = (acc[item.category] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>)
+  ).map(([category, count]) => ({
+    category,
+    saved: count,
+    wasted: 0, // This would be tracked from actual data
   }));
 
   return (
@@ -75,7 +117,7 @@ export default function Dashboard() {
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{mockAnalyticsData.totalItems}</div>
+              <div className="text-2xl font-bold">{foodItems.length}</div>
               <p className="text-xs text-muted-foreground">
                 <TrendingUp className="h-3 w-3 inline mr-1 text-green-600" />
                 +2 from yesterday
@@ -89,7 +131,7 @@ export default function Dashboard() {
               <AlertTriangle className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{mockAnalyticsData.expiringSoon}</div>
+              <div className="text-2xl font-bold text-yellow-600">{expiringSoonCount}</div>
               <p className="text-xs text-muted-foreground">
                 Items expiring in 2 days
               </p>
@@ -102,7 +144,7 @@ export default function Dashboard() {
               <DollarSign className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">${mockAnalyticsData.moneySaved}</div>
+              <div className="text-2xl font-bold text-green-600">$127</div>
               <p className="text-xs text-muted-foreground">
                 <TrendingUp className="h-3 w-3 inline mr-1 text-green-600" />
                 +12% this month
@@ -116,7 +158,7 @@ export default function Dashboard() {
               <Leaf className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{mockAnalyticsData.co2Saved}kg</div>
+              <div className="text-2xl font-bold text-green-600">23kg</div>
               <p className="text-xs text-muted-foreground">
                 Carbon footprint reduced
               </p>
@@ -187,33 +229,41 @@ export default function Dashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {mockFoodItems.map((item) => {
-                const badge = getExpirationBadge(item.daysUntilExpiration);
-                return (
-                  <Card key={item.id} className={`transition-all duration-200 hover:shadow-md ${getExpirationColor(item.daysUntilExpiration)}`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="text-2xl">
-                          {categoryIcons[item.category] || '📦'}
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading items...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {foodItems.map((item) => {
+                  const days = item.daysUntilExpiration || 0;
+                  const badge = getExpirationBadge(days);
+                  return (
+                    <Card key={item.id} className={`transition-all duration-200 hover:shadow-md ${getExpirationColor(days)}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="text-2xl">
+                            {categoryIcons[item.category] || '📦'}
+                          </div>
+                          <Badge className={badge.color}>
+                            {badge.text}
+                          </Badge>
                         </div>
-                        <Badge className={badge.color}>
-                          {badge.text}
-                        </Badge>
-                      </div>
-                      <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
-                      <p className="text-sm text-gray-600 mb-2">{item.quantity}</p>
-                      <div className="flex items-center text-xs text-gray-500">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        Expires: {new Date(item.expirationDate).toLocaleDateString()}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+                        <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
+                        <p className="text-sm text-gray-600 mb-2">{item.quantity}</p>
+                        <div className="flex items-center text-xs text-gray-500">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          Expires: {new Date(item.expirationDate).toLocaleDateString()}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
 
-            {mockFoodItems.length === 0 && (
+            {!loading && foodItems.length === 0 && (
               <div className="text-center py-12">
                 <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No items in your fridge</h3>
@@ -228,7 +278,11 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <AddItemModal open={isAddModalOpen} onOpenChange={setIsAddModalOpen} />
+      <AddItemModal 
+        open={isAddModalOpen} 
+        onOpenChange={setIsAddModalOpen} 
+        onItemAdded={fetchFoodItems}
+      />
       <ChatBot />
     </div>
   );
