@@ -93,11 +93,35 @@ export const mealPlanApi = {
   getFuture: () => apiRequest('/meal-plans/future'),
 };
 
+// Vision API functions
+export const visionApi = {
+  detectFood: (imageFile: File) => {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    
+    return fetch(`${API_BASE_URL}/vision/detect-food`, {
+      method: 'POST',
+      body: formData, // Don't set Content-Type header for FormData
+    }).then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    });
+  },
+  
+  saveSelectedItems: (selectedItems: any[]) => apiRequest('/vision/save-selected-items', {
+    method: 'POST',
+    body: JSON.stringify({ selectedItems }),
+  }),
+};
+
 // Export all APIs
 export const api = {
   recipes: recipeApi,
   inventory: inventoryApi,
   mealPlans: mealPlanApi,
+  vision: visionApi,
 };
 
 export default api;
