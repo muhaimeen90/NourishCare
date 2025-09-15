@@ -1,7 +1,0 @@
-com/nourishcare/inventoryservice/model/FoodItem$ExpirationStatus.class
-com/nourishcare/inventoryservice/model/FoodItem.class
-com/nourishcare/inventoryservice/controller/InventoryController.class
-com/nourishcare/inventoryservice/repository/FoodItemRepository.class
-com/nourishcare/inventoryservice/model/FoodItem$NutritionInfo.class
-com/nourishcare/inventoryservice/service/InventoryService.class
-com/nourishcare/inventoryservice/InventoryServiceApplication.class

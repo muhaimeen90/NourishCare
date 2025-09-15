@@ -1,7 +1,0 @@
-com/nourishcare/recipeservice/model/Recipe$NutritionInfo.class
-com/nourishcare/recipeservice/service/RecipeService.class
-com/nourishcare/recipeservice/model/Recipe.class
-com/nourishcare/recipeservice/service/SpoonacularService.class
-com/nourishcare/recipeservice/repository/RecipeRepository.class
-com/nourishcare/recipeservice/controller/RecipeController.class
-com/nourishcare/recipeservice/RecipeServiceApplication.class

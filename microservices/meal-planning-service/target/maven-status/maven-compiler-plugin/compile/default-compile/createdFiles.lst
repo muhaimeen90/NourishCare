@@ -1,9 +1,0 @@
-com/nourishcare/mealplanningservice/model/MealPlan$MealType.class
-com/nourishcare/mealplanningservice/model/MealPlan$NutritionInfo.class
-com/nourishcare/mealplanningservice/model/MealPlan$NutritionalGoals.class
-com/nourishcare/mealplanningservice/model/MealPlan$PlannedMeal.class
-com/nourishcare/mealplanningservice/model/MealPlan$PlanStatus.class
-com/nourishcare/mealplanningservice/model/MealPlan$WeeklyMealPlan.class
-com/nourishcare/mealplanningservice/model/MealPlan$DailyMealPlan.class
-com/nourishcare/mealplanningservice/model/MealPlan.class
-com/nourishcare/mealplanningservice/MealPlanningServiceApplication.class

@@ -1,8 +1,0 @@
-com/nourishcare/visionservice/service/VisionService.class
-com/nourishcare/visionservice/VisionServiceApplication.class
-com/nourishcare/visionservice/model/FoodDetection$NutritionInfo.class
-com/nourishcare/visionservice/config/GoogleCloudConfig.class
-com/nourishcare/visionservice/repository/FoodDetectionRepository.class
-com/nourishcare/visionservice/controller/VisionController.class
-com/nourishcare/visionservice/model/FoodDetection$DetectedFood.class
-com/nourishcare/visionservice/model/FoodDetection.class
