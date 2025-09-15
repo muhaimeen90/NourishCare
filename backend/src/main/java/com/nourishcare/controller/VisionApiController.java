@@ -119,7 +119,6 @@ public class VisionApiController {
                     foodItem.setCategory(category);
                     foodItem.setQuantity(quantity);
                     
-                    // Set expiration date to 7 days from now (default)
                     foodItem.setExpirationDate(LocalDate.now().plusDays(7));
 
                     FoodItem saved = foodItemService.saveFoodItem(foodItem);
