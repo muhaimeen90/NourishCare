@@ -15,7 +15,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/vision")
-@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
 public class VisionController {
 
     @Autowired
@@ -35,32 +34,43 @@ public class VisionController {
     /**
      * Upload image and detect food items
      */
-    @PostMapping("/detect-food-items")
+    @PostMapping("/detect-food")
     public ResponseEntity<?> detectFoodItems(@RequestParam("image") MultipartFile file) {
         try {
             // Validate file
             if (file.isEmpty()) {
-                Map<String, String> error = new HashMap<>();
-                error.put("error", "Please select an image file");
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "Please select an image file");
                 return ResponseEntity.badRequest().body(error);
             }
 
             // Check file type
             String contentType = file.getContentType();
             if (contentType == null || !contentType.startsWith("image/")) {
-                Map<String, String> error = new HashMap<>();
-                error.put("error", "Please upload a valid image file");
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "Please upload a valid image file");
                 return ResponseEntity.badRequest().body(error);
             }
 
             // Process image
             FoodDetection detection = visionService.detectFoodItems(file);
             
-            return ResponseEntity.ok(detection);
+            // Format response to match frontend expectations
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Food items detected successfully");
+            response.put("detectedItems", detection.getDetectedFoods());
+            response.put("totalItems", detection.getDetectedFoods().size());
+            response.put("detectionId", detection.getId());
+            
+            return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Failed to process image: " + e.getMessage());
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Failed to process image: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }

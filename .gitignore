@@ -58,6 +58,8 @@ backend/.env
 *.p12
 *.jks
 
+microservices/vision-service/src/main/resources/*.json
+
 # Sensitive configuration files
 application-prod.properties
 application-secret.properties

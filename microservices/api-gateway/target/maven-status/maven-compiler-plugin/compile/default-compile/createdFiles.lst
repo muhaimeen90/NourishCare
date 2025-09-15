@@ -1,0 +1,3 @@
+com/nourishcare/apigateway/config/CorsConfig.class
+com/nourishcare/apigateway/controller/FallbackController.class
+com/nourishcare/apigateway/ApiGatewayApplication.class

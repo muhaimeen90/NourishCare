@@ -19,6 +19,9 @@ public class VisionService {
     @Autowired
     private FoodDetectionRepository foodDetectionRepository;
 
+    @Autowired
+    private ImageAnnotatorSettings imageAnnotatorSettings;
+
     @Value("${vision.api.mock:false}")
     private boolean useMockService;
 
@@ -90,7 +93,7 @@ public class VisionService {
     private List<FoodDetection.DetectedFood> detectFoodItemsWithVisionAPI(MultipartFile file) throws IOException {
         List<FoodDetection.DetectedFood> detectedFoods = new ArrayList<>();
 
-        try (ImageAnnotatorClient vision = ImageAnnotatorClient.create()) {
+        try (ImageAnnotatorClient vision = ImageAnnotatorClient.create(imageAnnotatorSettings)) {
             ByteString imgBytes = ByteString.copyFrom(file.getBytes());
             Image img = Image.newBuilder().setContent(imgBytes).build();
             Feature feat = Feature.newBuilder().setType(Feature.Type.LABEL_DETECTION).build();

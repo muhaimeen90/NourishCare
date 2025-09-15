@@ -1,21 +1,6 @@
 version: '3.8'
 
 services:
-  # MongoDB Database
-  mongodb:
-    image: mongo:5.0
-    container_name: nourishcare-mongodb
-    restart: unless-stopped
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_DATABASE: nourishcare
-    volumes:
-      - mongodb_data:/data/db
-      - ./scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
-    networks:
-      - nourishcare-network
-
   # Service Discovery (Eureka Server)
   eureka-server:
     build: 
@@ -31,9 +16,10 @@ services:
       - nourishcare-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      interval: 60s
+      timeout: 30s
+      start_period: 120s
+      retries: 5
 
   # Configuration Server
   config-server:
@@ -54,9 +40,10 @@ services:
       - nourishcare-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      interval: 60s
+      timeout: 30s
+      start_period: 120s
+      retries: 5
 
   # Vision Service
   vision-service:
@@ -71,15 +58,13 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
-      - MONGODB_URI=mongodb://mongodb:27017/nourishcare_vision
+      - MONGODB_URI=mongodb+srv://bsse1423:0EdiK07CNK1IkrOg@cluster0.s15l1.mongodb.net/NourishCare
       - VISION_API_MOCK=true
     depends_on:
       eureka-server:
         condition: service_healthy
       config-server:
         condition: service_healthy
-      mongodb:
-        condition: service_started
     networks:
       - nourishcare-network
     volumes:
@@ -98,15 +83,13 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
-      - MONGODB_URI=mongodb://mongodb:27017/nourishcare_recipes
+      - MONGODB_URI=mongodb+srv://bsse1423:0EdiK07CNK1IkrOg@cluster0.s15l1.mongodb.net/NourishCare
       - SPOONACULAR_API_MOCK=true
     depends_on:
       eureka-server:
         condition: service_healthy
       config-server:
         condition: service_healthy
-      mongodb:
-        condition: service_started
     networks:
       - nourishcare-network
 
@@ -123,14 +106,12 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
-      - MONGODB_URI=mongodb://mongodb:27017/nourishcare_inventory
+      - MONGODB_URI=mongodb+srv://bsse1423:0EdiK07CNK1IkrOg@cluster0.s15l1.mongodb.net/NourishCare
     depends_on:
       eureka-server:
         condition: service_healthy
       config-server:
         condition: service_healthy
-      mongodb:
-        condition: service_started
     networks:
       - nourishcare-network
 
@@ -147,14 +128,12 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
-      - MONGODB_URI=mongodb://mongodb:27017/nourishcare_meal_planning
+      - MONGODB_URI=mongodb+srv://bsse1423:0EdiK07CNK1IkrOg@cluster0.s15l1.mongodb.net/NourishCare
     depends_on:
       eureka-server:
         condition: service_healthy
       config-server:
         condition: service_healthy
-      mongodb:
-        condition: service_started
     networks:
       - nourishcare-network
 
@@ -166,19 +145,17 @@ services:
     container_name: nourishcare-user-service
     restart: unless-stopped
     ports:
-      - "8085:8085"
+      - "8086:8086"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
-      - MONGODB_URI=mongodb://mongodb:27017/nourishcare_users
+      - MONGODB_URI=mongodb+srv://bsse1423:0EdiK07CNK1IkrOg@cluster0.s15l1.mongodb.net/NourishCare
     depends_on:
       eureka-server:
         condition: service_healthy
       config-server:
         condition: service_healthy
-      mongodb:
-        condition: service_started
     networks:
       - nourishcare-network
 
@@ -216,6 +193,3 @@ services:
 networks:
   nourishcare-network:
     driver: bridge
-
-volumes:
-  mongodb_data:

@@ -5,9 +5,7 @@ spring:
     import: configserver:http://localhost:8888
   data:
     mongodb:
-      database: inventory_db
-      host: localhost
-      port: 27017
+      uri: ${MONGODB_URI}
   cloud:
     config:
       enabled: true

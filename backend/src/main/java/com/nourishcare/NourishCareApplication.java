@@ -10,7 +10,7 @@ public class NourishCareApplication {
     public static void main(String[] args) {
         // Load environment variables from .env file
         Dotenv dotenv = Dotenv.configure()
-                .directory("./backend")
+                .directory(".")
                 .ignoreIfMissing()
                 .load();
         

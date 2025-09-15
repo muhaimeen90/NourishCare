@@ -1,0 +1,10 @@
+com/nourishcare/userservice/UserServiceApplication.class
+com/nourishcare/userservice/model/User$HealthProfile.class
+com/nourishcare/userservice/model/User$AccountStatus.class
+com/nourishcare/userservice/model/User$UserPreferences.class
+com/nourishcare/userservice/model/User$Gender.class
+com/nourishcare/userservice/model/User$ActivityLevel.class
+com/nourishcare/userservice/model/User.class
+com/nourishcare/userservice/model/User$Address.class
+com/nourishcare/userservice/model/User$NutritionalGoals.class
+com/nourishcare/userservice/model/User$UserRole.class

@@ -1,17 +1,22 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
+console.log('API_BASE_URL is set to:', API_BASE_URL); // Debug log
+
 // Generic API helper function
 async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
+  console.log('Making API request to:', url); // Debug log
+  console.log('Environment variable NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL); // Debug log
   const config: RequestInit = {
     headers: {
-      'Content-Type': 'application/json',
+      ...(options.method && options.method !== 'GET' ? { 'Content-Type': 'application/json' } : {}),
       ...options.headers,
     },
     ...options,
   };
 
   try {
+    console.log('API request config:', config); // Debug log
     const response = await fetch(url, config);
     
     if (!response.ok) {
@@ -95,11 +100,25 @@ export const mealPlanApi = {
 
 // Vision API functions
 export const visionApi = {
+  detectFood: (imageFile: File) => {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    
+    return fetch(`${API_BASE_URL}/api/vision/detect-food`, {
+      method: 'POST',
+      body: formData,
+    }).then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    });
+  },
   detectFoodItems: (imageFile: File) => {
     const formData = new FormData();
     formData.append('image', imageFile);
     
-    return fetch(`${API_BASE_URL}/api/vision/detect-food-items`, {
+    return fetch(`${API_BASE_URL}/api/vision/detect-food`, {
       method: 'POST',
       body: formData,
     }).then(response => {
@@ -116,28 +135,7 @@ export const visionApi = {
   getStats: () => apiRequest('/api/vision/stats'),
 };
 
-// Vision API functions
-export const visionApi = {
-  detectFood: (imageFile: File) => {
-    const formData = new FormData();
-    formData.append('image', imageFile);
-    
-    return fetch(`${API_BASE_URL}/vision/detect-food`, {
-      method: 'POST',
-      body: formData, // Don't set Content-Type header for FormData
-    }).then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    });
-  },
-  
-  saveSelectedItems: (selectedItems: any[]) => apiRequest('/vision/save-selected-items', {
-    method: 'POST',
-    body: JSON.stringify({ selectedItems }),
-  }),
-};
+
 
 // Export all APIs
 export const api = {
