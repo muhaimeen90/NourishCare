@@ -46,3 +46,18 @@ backend/mvnw.cmd
 # Database
 *.db
 *.sqlite
+
+# Credentials and secrets
+backend/src/main/resources/*.json
+backend/.env
+.env
+.env.local
+*.key
+*credentials*
+*.pem
+*.p12
+*.jks
+
+# Sensitive configuration files
+application-prod.properties
+application-secret.properties
