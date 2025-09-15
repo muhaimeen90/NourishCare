@@ -1,0 +1,221 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:5.0
+    container_name: nourishcare-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: nourishcare
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - nourishcare-network
+
+  # Service Discovery (Eureka Server)
+  eureka-server:
+    build: 
+      context: ./service-discovery
+      dockerfile: Dockerfile
+    container_name: nourishcare-eureka
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - nourishcare-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Configuration Server
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    container_name: nourishcare-config-server
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - nourishcare-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Vision Service
+  vision-service:
+    build:
+      context: ./vision-service
+      dockerfile: Dockerfile
+    container_name: nourishcare-vision-service
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - MONGODB_URI=mongodb://mongodb:27017/nourishcare_vision
+      - VISION_API_MOCK=true
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    networks:
+      - nourishcare-network
+    volumes:
+      - ./credentials:/app/credentials:ro
+
+  # Recipe Service
+  recipe-service:
+    build:
+      context: ./recipe-service
+      dockerfile: Dockerfile
+    container_name: nourishcare-recipe-service
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - MONGODB_URI=mongodb://mongodb:27017/nourishcare_recipes
+      - SPOONACULAR_API_MOCK=true
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    networks:
+      - nourishcare-network
+
+  # Inventory Service
+  inventory-service:
+    build:
+      context: ./inventory-service
+      dockerfile: Dockerfile
+    container_name: nourishcare-inventory-service
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - MONGODB_URI=mongodb://mongodb:27017/nourishcare_inventory
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    networks:
+      - nourishcare-network
+
+  # Meal Planning Service
+  meal-planning-service:
+    build:
+      context: ./meal-planning-service
+      dockerfile: Dockerfile
+    container_name: nourishcare-meal-planning-service
+    restart: unless-stopped
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - MONGODB_URI=mongodb://mongodb:27017/nourishcare_meal_planning
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    networks:
+      - nourishcare-network
+
+  # User Service
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: nourishcare-user-service
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - MONGODB_URI=mongodb://mongodb:27017/nourishcare_users
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    networks:
+      - nourishcare-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: nourishcare-api-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      vision-service:
+        condition: service_started
+      recipe-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+      meal-planning-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+    networks:
+      - nourishcare-network
+
+networks:
+  nourishcare-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
