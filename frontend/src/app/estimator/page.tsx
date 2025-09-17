@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Upload, Camera, Image as ImageIcon, Zap, Check, X, Edit3, Save, AlertCircle, Info } from 'lucide-react';
-import { Navigation } from '@/components/Navigation';
 import { ChatBot } from '@/components/ChatBot';
 import { api } from '@/lib/api';
 
@@ -137,10 +136,7 @@ export default function CalorieEstimator() {
   const selectedCount = detectedItems.filter(item => item.selected).length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
           <h1 className="text-3xl font-bold text-gray-900">AI Food Detection</h1>
@@ -434,7 +430,6 @@ export default function CalorieEstimator() {
             )}
           </div>
         </div>
-      </div>
 
       <ChatBot />
     </div>

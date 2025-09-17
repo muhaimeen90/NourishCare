@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { Scan, FileText, PlusCircle, Camera } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AddItemModalProps {
   open: boolean;
@@ -18,6 +19,7 @@ interface AddItemModalProps {
 }
 
 export function AddItemModal({ open, onOpenChange, onItemAdded }: AddItemModalProps) {
+  const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
     name: '',
@@ -29,7 +31,8 @@ export function AddItemModal({ open, onOpenChange, onItemAdded }: AddItemModalPr
 
   const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedDate || !formData.name || !formData.quantity || !formData.category) {
+    if (!selectedDate || !formData.name || !formData.quantity || !formData.category || !user?.id) {
+      console.error('Missing required fields or user not authenticated');
       return;
     }
 
@@ -40,6 +43,7 @@ export function AddItemModal({ open, onOpenChange, onItemAdded }: AddItemModalPr
         quantity: formData.quantity,
         category: formData.category,
         expirationDate: selectedDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        userId: user.id, // Add the userId field
       });
       
       onOpenChange(false);
@@ -166,7 +170,11 @@ export function AddItemModal({ open, onOpenChange, onItemAdded }: AddItemModalPr
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
                   Cancel
                 </Button>
-                <Button type="submit" disabled={loading} className="flex-1 bg-green-600 hover:bg-green-700">
+                <Button 
+                  type="submit" 
+                  disabled={loading || !user?.id} 
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
                   {loading ? 'Adding...' : 'Add Item'}
                 </Button>
               </div>

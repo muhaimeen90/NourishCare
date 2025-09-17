@@ -2,6 +2,7 @@ package com.nourishcare.inventoryservice.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,18 +12,23 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.nourishcare.inventoryservice.model.FoodDonation;
+import com.nourishcare.inventoryservice.model.FoodDonationRequest;
 import com.nourishcare.inventoryservice.model.FoodItem;
 import com.nourishcare.inventoryservice.model.FoodItem.ExpirationStatus;
+import com.nourishcare.inventoryservice.repository.FoodDonationRepository;
 import com.nourishcare.inventoryservice.repository.FoodItemRepository;
 
 @Service
 public class InventoryService {
     
     private final FoodItemRepository foodItemRepository;
+    private final FoodDonationRepository foodDonationRepository;
     
     @Autowired
-    public InventoryService(FoodItemRepository foodItemRepository) {
+    public InventoryService(FoodItemRepository foodItemRepository, FoodDonationRepository foodDonationRepository) {
         this.foodItemRepository = foodItemRepository;
+        this.foodDonationRepository = foodDonationRepository;
     }
     
     /**
@@ -285,5 +291,137 @@ public class InventoryService {
                     
                     return foodItemRepository.save(item);
                 });
+    }
+    
+    // ================================
+    // COMMUNITY DONATION METHODS
+    // ================================
+    
+    /**
+     * Create a new food donation
+     */
+    public FoodDonation createDonation(String donorId, FoodDonationRequest request) {
+        // Get the food items that the user wants to donate
+        List<FoodItem> allItems = new ArrayList<>();
+        foodItemRepository.findAllById(request.getFoodItemIds()).forEach(allItems::add);
+        
+        List<FoodItem> donatedItems = allItems
+                .stream()
+                .filter(item -> item.getUserId().equals(donorId)) // Security: only user's own items
+                .collect(Collectors.toList());
+        
+        if (donatedItems.isEmpty()) {
+            throw new IllegalArgumentException("No valid food items found for donation");
+        }
+        
+        // Create the donation
+        FoodDonation donation = new FoodDonation();
+        donation.setDonorId(donorId);
+        donation.setDonorName(request.getDonorName());
+        donation.setDonorPhone(request.getDonorPhone());
+        donation.setDonorEmail(request.getDonorEmail());
+        donation.setAddress(request.getAddress());
+        donation.setCity(request.getCity());
+        donation.setPickupInstructions(request.getPickupInstructions());
+        donation.setDescription(request.getDescription());
+        donation.setFoodItems(donatedItems);
+        donation.setStatus(FoodDonation.DonationStatus.AVAILABLE);
+        
+        return foodDonationRepository.save(donation);
+    }
+    
+    /**
+     * Get all available donations for community browsing
+     */
+    public List<FoodDonation> getAllAvailableDonations() {
+        return foodDonationRepository.findByStatusOrderByCreatedAtDesc(FoodDonation.DonationStatus.AVAILABLE);
+    }
+    
+    /**
+     * Get available donations by city
+     */
+    public List<FoodDonation> getAvailableDonationsByCity(String city) {
+        return foodDonationRepository.findByCityIgnoreCaseAndStatusOrderByCreatedAtDesc(city, FoodDonation.DonationStatus.AVAILABLE);
+    }
+    
+    /**
+     * Get donations by a specific donor
+     */
+    public List<FoodDonation> getDonationsByDonor(String donorId) {
+        return foodDonationRepository.findByDonorIdOrderByCreatedAtDesc(donorId);
+    }
+    
+    /**
+     * Get donation by ID
+     */
+    public Optional<FoodDonation> getDonationById(String donationId) {
+        return foodDonationRepository.findById(donationId);
+    }
+    
+    /**
+     * Update donation status
+     */
+    public Optional<FoodDonation> updateDonationStatus(String donationId, String donorId, FoodDonation.DonationStatus newStatus) {
+        return foodDonationRepository.findById(donationId)
+                .filter(donation -> donation.getDonorId().equals(donorId)) // Security: only donor can update
+                .map(donation -> {
+                    donation.setStatus(newStatus);
+                    return foodDonationRepository.save(donation);
+                });
+    }
+    
+    /**
+     * Cancel a donation (only by donor)
+     */
+    public boolean cancelDonation(String donationId, String donorId) {
+        Optional<FoodDonation> donation = foodDonationRepository.findById(donationId);
+        if (donation.isPresent() && donation.get().getDonorId().equals(donorId)) {
+            donation.get().setStatus(FoodDonation.DonationStatus.CANCELLED);
+            foodDonationRepository.save(donation.get());
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Get user's expiring items suitable for donation
+     */
+    public List<FoodItem> getExpiringSoonForDonation(String userId, int days) {
+        return getItemsExpiringSoon(userId, days)
+                .stream()
+                .filter(item -> !item.getIsConsumed())
+                .filter(item -> !item.getIsOpened()) // Prefer unopened items for donation
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get donation statistics
+     */
+    public Map<String, Object> getDonationStats() {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalAvailableDonations", foodDonationRepository.countByStatus(FoodDonation.DonationStatus.AVAILABLE));
+        stats.put("totalCompletedDonations", foodDonationRepository.countByStatus(FoodDonation.DonationStatus.TAKEN));
+        
+        // Get recent donations (last 7 days)
+        LocalDateTime weekAgo = LocalDateTime.now().minusDays(7);
+        List<FoodDonation> recentDonations = foodDonationRepository.findByCreatedAtAfterOrderByCreatedAtDesc(weekAgo);
+        stats.put("recentDonations", recentDonations.size());
+        
+        return stats;
+    }
+    
+    /**
+     * Clean up expired donations (utility method)
+     */
+    public void cleanupExpiredDonations() {
+        LocalDateTime threeDaysAgo = LocalDateTime.now().minusDays(3);
+        List<FoodDonation> oldDonations = foodDonationRepository.findOldDonations(threeDaysAgo);
+        
+        for (FoodDonation donation : oldDonations) {
+            if (donation.getStatus() == FoodDonation.DonationStatus.AVAILABLE) {
+                donation.setStatus(FoodDonation.DonationStatus.EXPIRED);
+                foodDonationRepository.save(donation);
+            }
+        }
     }
 }

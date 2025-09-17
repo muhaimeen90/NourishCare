@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Leaf, Mail, Lock, Apple } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Home() {
   const router = useRouter();
+  const { signInWithGoogle } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,8 +23,7 @@ export default function Home() {
   };
 
   const handleSocialLogin = () => {
-    // Mock social login - redirect to dashboard
-    router.push('/dashboard');
+    signInWithGoogle()
   };
 
   return (

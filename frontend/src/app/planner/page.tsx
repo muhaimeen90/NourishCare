@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Calendar, ChevronLeft, ChevronRight, Plus, Clock, Users, ShoppingCart, Check } from 'lucide-react';
 import { mockRecipes, Recipe } from '@/lib/mock-data';
-import { Navigation } from '@/components/Navigation';
 import { ChatBot } from '@/components/ChatBot';
 
 export default function MealPlanner() {
@@ -86,10 +85,7 @@ export default function MealPlanner() {
   const nutrition = getTotalNutrition();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -308,7 +304,6 @@ export default function MealPlanner() {
             </Card>
           </div>
         </div>
-      </div>
 
       <ChatBot />
     </div>

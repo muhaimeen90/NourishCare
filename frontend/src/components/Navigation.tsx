@@ -2,20 +2,28 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Leaf, Home, ChefHat, Calendar, Camera, User, Menu, X } from 'lucide-react';
+import { Leaf, Home, ChefHat, Calendar, Camera, User, Menu, X, Heart, LogIn, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Recipes', href: '/recipes', icon: ChefHat },
   { name: 'Meal Planner', href: '/planner', icon: Calendar },
   { name: 'Calorie Estimator', href: '/estimator', icon: Camera },
+  { name: 'Community Sharing', href: '/donations', icon: Heart },
 ];
 
 export function Navigation() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, logout, isAuthenticated, isLoading } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -56,10 +64,39 @@ export function Navigation() {
 
           {/* User Menu */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="sm">
-              <User className="h-4 w-4 mr-2" />
-              Profile
-            </Button>
+            {!isLoading && (
+              <>
+                {isAuthenticated ? (
+                  <>
+                    <span className="text-sm text-gray-600">
+                      Welcome, {user?.firstName}
+                    </span>
+                    <Button variant="ghost" size="sm">
+                      <User className="h-4 w-4 mr-2" />
+                      Profile
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleLogout}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/auth/login">
+                      <Button variant="ghost" size="sm">
+                        <LogIn className="h-4 w-4 mr-2" />
+                        Login
+                      </Button>
+                    </Link>
+                    <Link href="/auth/register">
+                      <Button size="sm">
+                        Sign Up
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -103,11 +140,41 @@ export function Navigation() {
                 </Link>
               );
             })}
+            
             <div className="border-t border-gray-200 pt-4 pb-3">
-              <Button variant="ghost" className="w-full justify-start">
-                <User className="h-4 w-4 mr-2" />
-                Profile
-              </Button>
+              {!isLoading && (
+                <>
+                  {isAuthenticated ? (
+                    <>
+                      <div className="px-3 py-2 text-base font-medium text-gray-600">
+                        Welcome, {user?.firstName}
+                      </div>
+                      <Button variant="ghost" className="w-full justify-start">
+                        <User className="h-4 w-4 mr-2" />
+                        Profile
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Logout
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button variant="ghost" className="w-full justify-start">
+                          <LogIn className="h-4 w-4 mr-2" />
+                          Login
+                        </Button>
+                      </Link>
+                      <Link href="/auth/register" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button className="w-full mt-2">
+                          Sign Up
+                        </Button>
+                      </Link>
+                    </>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -8,9 +8,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import { Plus, AlertTriangle, TrendingUp, Leaf, DollarSign, Calendar, Package } from 'lucide-react';
 import { api } from '@/lib/api';
 import { AddItemModal } from '@/components/AddItemModal';
+import { useAuth } from '@/contexts/AuthContext';
 import { ChatBot } from '@/components/ChatBot';
-import { Navigation } from '@/components/Navigation';
-
 interface FoodItem {
   id: string;
   name: string;
@@ -21,18 +20,23 @@ interface FoodItem {
 }
 
 export default function Dashboard() {
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchFoodItems();
-  }, []);
+    if (isAuthenticated && user?.id) {
+      fetchFoodItems();
+    }
+  }, [isAuthenticated, user?.id]);
 
   const fetchFoodItems = async () => {
+    if (!user?.id) return;
+    
     try {
       setLoading(true);
-      const data = await api.inventory.getAll();
+      const data = await api.inventory.getAllForUser(user.id);
       // Calculate days until expiration for each item
       const itemsWithDays = data.map((item: any) => ({
         ...item,
@@ -90,10 +94,25 @@ export default function Dashboard() {
   }));
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-4 py-8 space-y-8">
+      {/* Show loading spinner while checking authentication */}
+      {authLoading && (
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
+        </div>
+      )}
+
+      {/* Show login message if not authenticated */}
+      {!authLoading && !isAuthenticated && (
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Please log in to access your dashboard</h1>
+          <p className="text-gray-600">You need to be signed in to view your food inventory.</p>
+        </div>
+      )}
+
+      {/* Main dashboard content - only show if authenticated */}
+      {!authLoading && isAuthenticated && user && (
+        <>
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -276,14 +295,15 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
-      </div>
 
-      <AddItemModal 
-        open={isAddModalOpen} 
-        onOpenChange={setIsAddModalOpen} 
-        onItemAdded={fetchFoodItems}
-      />
-      <ChatBot />
+        <AddItemModal 
+          open={isAddModalOpen} 
+          onOpenChange={setIsAddModalOpen} 
+          onItemAdded={fetchFoodItems}
+        />
+        <ChatBot />
+        </>
+      )}
     </div>
   );
 }

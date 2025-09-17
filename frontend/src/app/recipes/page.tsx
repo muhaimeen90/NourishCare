@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Search, Clock, Users, ChefHat, Filter } from 'lucide-react';
 import { api } from '@/lib/api';
-import { Navigation } from '@/components/Navigation';
 import { ChatBot } from '@/components/ChatBot';
 
 interface Recipe {
@@ -73,13 +72,10 @@ export default function Recipes() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading recipes...</p>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading recipes...</p>
         </div>
       </div>
     );
@@ -87,23 +83,17 @@ export default function Recipes() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <p className="text-red-600">{error}</p>
-            <Button onClick={fetchRecipes} className="mt-4">Try Again</Button>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <p className="text-red-600">{error}</p>
+          <Button onClick={fetchRecipes} className="mt-4">Try Again</Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
           <h1 className="text-3xl font-bold text-gray-900">Recipe Collection</h1>
@@ -300,7 +290,6 @@ export default function Recipes() {
             </div>
           </CardContent>
         </Card>
-      </div>
 
       <ChatBot />
     </div>

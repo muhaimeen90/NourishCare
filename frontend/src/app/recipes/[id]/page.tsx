@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Clock, Users, ChefHat, Heart, Share, Plus } from 'lucide-react';
 import { mockRecipes } from '@/lib/mock-data';
-import { Navigation } from '@/components/Navigation';
 import { ChatBot } from '@/components/ChatBot';
 
 export default function RecipeDetail() {
@@ -19,13 +18,10 @@ export default function RecipeDetail() {
 
   if (!recipe) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Recipe Not Found</h1>
-            <Button onClick={() => router.back()}>Go Back</Button>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Recipe Not Found</h1>
+          <Button onClick={() => router.back()}>Go Back</Button>
         </div>
       </div>
     );
@@ -48,10 +44,7 @@ export default function RecipeDetail() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Back Button */}
         <Button 
           variant="ghost" 
@@ -236,7 +229,6 @@ export default function RecipeDetail() {
             </Card>
           </div>
         </div>
-      </div>
 
       <ChatBot />
     </div>

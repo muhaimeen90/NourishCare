@@ -7,9 +7,14 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
   console.log('Making API request to:', url); // Debug log
   console.log('Environment variable NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL); // Debug log
+  
+  // Get token from localStorage if available
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  
   const config: RequestInit = {
     headers: {
       ...(options.method && options.method !== 'GET' ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...options.headers,
     },
     ...options,
@@ -59,23 +64,27 @@ export const recipeApi = {
 
 // Food Item (Inventory) API functions
 export const inventoryApi = {
-  getAll: () => apiRequest('/api/inventory'),
-  getById: (id: string) => apiRequest(`/api/inventory/${id}`),
-  create: (item: any) => apiRequest('/api/inventory', {
+  getAllForUser: (userId: string) => apiRequest(`/api/inventory/users/${userId}/items`),
+  getById: (id: string) => apiRequest(`/api/inventory/items/${id}`),
+  create: (item: any) => apiRequest('/api/inventory/items', {
     method: 'POST',
     body: JSON.stringify(item),
   }),
-  update: (id: string, item: any) => apiRequest(`/api/inventory/${id}`, {
+  update: (id: string, item: any) => apiRequest(`/api/inventory/items/${id}`, {
     method: 'PUT',
     body: JSON.stringify(item),
   }),
-  delete: (id: string) => apiRequest(`/api/inventory/${id}`, {
+  delete: (id: string) => apiRequest(`/api/inventory/items/${id}`, {
     method: 'DELETE',
   }),
-  getByCategory: (category: string) => apiRequest(`/api/inventory/category/${category}`),
-  getExpiringSoon: (days: number = 3) => apiRequest(`/api/inventory/expiring-soon?days=${days}`),
-  getExpired: () => apiRequest('/api/inventory/expired'),
-  search: (name: string) => apiRequest(`/api/inventory/search?name=${encodeURIComponent(name)}`),
+  getByCategory: (category: string) => apiRequest(`/api/inventory/items/category/${category}`),
+  getExpiringSoon: (days: number = 3) => apiRequest(`/api/inventory/items/expiring-soon?days=${days}`),
+  getExpired: () => apiRequest('/api/inventory/items/expired'),
+  search: (name: string) => apiRequest(`/api/inventory/items/search?name=${encodeURIComponent(name)}`),
+  // User-specific inventory endpoints
+  getUserItems: (userId: string) => apiRequest(`/api/inventory/users/${userId}/items`),
+  getUserItemsByCategory: (userId: string, category: string) => apiRequest(`/api/inventory/users/${userId}/items/category/${category}`),
+  getUserExpiringSoon: (userId: string, days: number = 3) => apiRequest(`/api/inventory/users/${userId}/items/expiring-soon?days=${days}`),
 };
 
 // Meal Plan API functions
@@ -135,6 +144,56 @@ export const visionApi = {
   getStats: () => apiRequest('/api/vision/stats'),
 };
 
+// Community Donation API functions
+export const donationApi = {
+  // Get all available donations
+  getAvailable: () => apiRequest('/api/community/donations/available'),
+  
+  // Get donations by city
+  getByCity: (city: string) => apiRequest(`/api/community/donations/city/${encodeURIComponent(city)}`),
+  
+  // Get user's donations
+  getUserDonations: (userId: string) => apiRequest(`/api/community/donations/donor/${userId}`),
+  
+  // Get donation by ID
+  getById: (id: string) => apiRequest(`/api/community/donations/${id}`),
+  
+  // Create new donation
+  create: (donationData: {
+    donorName: string;
+    donorPhone: string;
+    donorEmail: string;
+    address: string;
+    city: string;
+    pickupInstructions?: string;
+    description?: string;
+    foodItemIds: string[];
+  }) => apiRequest('/api/community/donations', {
+    method: 'POST',
+    body: JSON.stringify(donationData),
+  }),
+  
+  // Update donation status
+  updateStatus: (id: string, userId: string, status: 'AVAILABLE' | 'TAKEN' | 'CANCELLED' | 'EXPIRED') => 
+    apiRequest(`/api/community/donations/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ userId, status }),
+    }),
+  
+  // Cancel donation (donor only)
+  cancel: (id: string, userId: string) => apiRequest(`/api/community/donations/${id}/cancel`, {
+    method: 'PUT',
+    body: JSON.stringify({ userId }),
+  }),
+  
+  // Get donation statistics
+  getStats: () => apiRequest('/api/community/donations/stats'),
+  
+  // Get expiring items suitable for donation
+  getExpiringSoonForDonation: (userId: string, days: number = 3) => 
+    apiRequest(`/api/inventory/expiring-soon-donation?userId=${userId}&days=${days}`),
+};
+
 
 
 // Export all APIs
@@ -143,6 +202,7 @@ export const api = {
   inventory: inventoryApi,
   mealPlans: mealPlanApi,
   vision: visionApi,
+  donations: donationApi,
 };
 
 export default api;

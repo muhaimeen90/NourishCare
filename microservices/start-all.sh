@@ -25,6 +25,22 @@ check_port() {
     fi
 }
 
+# Function to check if a port is in use (Windows compatible)
+# check_port() {
+#     local port=$1
+#     # Windows compatible port check
+#     if command -v powershell.exe &> /dev/null; then
+#         # Use PowerShell if available
+#         powershell.exe -Command "(Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue) -ne \$null" 2>/dev/null
+#     elif command -v netstat &> /dev/null; then
+#         # Fallback to netstat
+#         netstat -an | grep ":$port " | grep -q LISTEN
+#     else
+#         # Last resort: assume port is free and continue
+#         return 1
+#     fi
+# }
+
 # Function to wait for service to be ready
 wait_for_service() {
     local service_name=$1

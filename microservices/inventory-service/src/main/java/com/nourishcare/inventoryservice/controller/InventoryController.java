@@ -14,7 +14,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/inventory")
-@CrossOrigin(origins = "*")
 public class InventoryController {
     
     private final InventoryService inventoryService;
