@@ -120,6 +120,15 @@ public class FoodDetection {
         private String category;
         private NutritionInfo nutritionInfo;
         
+        // New fields for USDA integration and portion estimation
+        private int usdaFdcId;
+        private double estimatedGrams;
+        private double estimatedCalories;
+        private String estimationMethod;
+        private String referenceObject;
+        private PortionEstimation portionEstimation;
+        private BoundingBox boundingBox;
+        
         // Constructors
         public DetectedFood() {}
         
@@ -159,6 +168,62 @@ public class FoodDetection {
 
         public void setNutritionInfo(NutritionInfo nutritionInfo) {
             this.nutritionInfo = nutritionInfo;
+        }
+
+        public int getUsdaFdcId() {
+            return usdaFdcId;
+        }
+
+        public void setUsdaFdcId(int usdaFdcId) {
+            this.usdaFdcId = usdaFdcId;
+        }
+
+        public double getEstimatedGrams() {
+            return estimatedGrams;
+        }
+
+        public void setEstimatedGrams(double estimatedGrams) {
+            this.estimatedGrams = estimatedGrams;
+        }
+
+        public double getEstimatedCalories() {
+            return estimatedCalories;
+        }
+
+        public void setEstimatedCalories(double estimatedCalories) {
+            this.estimatedCalories = estimatedCalories;
+        }
+
+        public String getEstimationMethod() {
+            return estimationMethod;
+        }
+
+        public void setEstimationMethod(String estimationMethod) {
+            this.estimationMethod = estimationMethod;
+        }
+
+        public String getReferenceObject() {
+            return referenceObject;
+        }
+
+        public void setReferenceObject(String referenceObject) {
+            this.referenceObject = referenceObject;
+        }
+
+        public PortionEstimation getPortionEstimation() {
+            return portionEstimation;
+        }
+
+        public void setPortionEstimation(PortionEstimation portionEstimation) {
+            this.portionEstimation = portionEstimation;
+        }
+
+        public BoundingBox getBoundingBox() {
+            return boundingBox;
+        }
+
+        public void setBoundingBox(BoundingBox boundingBox) {
+            this.boundingBox = boundingBox;
         }
     }
     
@@ -230,6 +295,116 @@ public class FoodDetection {
 
         public void setSugar(double sugar) {
             this.sugar = sugar;
+        }
+    }
+
+    // Inner class for portion estimation details
+    public static class PortionEstimation {
+        private double widthCm;
+        private double heightCm;
+        private double scaleFactor;
+        private double confidence;
+        private String method;
+
+        public PortionEstimation() {}
+
+        public PortionEstimation(double widthCm, double heightCm, double scaleFactor, double confidence, String method) {
+            this.widthCm = widthCm;
+            this.heightCm = heightCm;
+            this.scaleFactor = scaleFactor;
+            this.confidence = confidence;
+            this.method = method;
+        }
+
+        // Getters and Setters
+        public double getWidthCm() {
+            return widthCm;
+        }
+
+        public void setWidthCm(double widthCm) {
+            this.widthCm = widthCm;
+        }
+
+        public double getHeightCm() {
+            return heightCm;
+        }
+
+        public void setHeightCm(double heightCm) {
+            this.heightCm = heightCm;
+        }
+
+        public double getScaleFactor() {
+            return scaleFactor;
+        }
+
+        public void setScaleFactor(double scaleFactor) {
+            this.scaleFactor = scaleFactor;
+        }
+
+        public double getConfidence() {
+            return confidence;
+        }
+
+        public void setConfidence(double confidence) {
+            this.confidence = confidence;
+        }
+
+        public String getMethod() {
+            return method;
+        }
+
+        public void setMethod(String method) {
+            this.method = method;
+        }
+    }
+
+    // Inner class for bounding box coordinates
+    public static class BoundingBox {
+        private int x;
+        private int y;
+        private int width;
+        private int height;
+
+        public BoundingBox() {}
+
+        public BoundingBox(int x, int y, int width, int height) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+        }
+
+        // Getters and Setters
+        public int getX() {
+            return x;
+        }
+
+        public void setX(int x) {
+            this.x = x;
+        }
+
+        public int getY() {
+            return y;
+        }
+
+        public void setY(int y) {
+            this.y = y;
+        }
+
+        public int getWidth() {
+            return width;
+        }
+
+        public void setWidth(int width) {
+            this.width = width;
+        }
+
+        public int getHeight() {
+            return height;
+        }
+
+        public void setHeight(int height) {
+            this.height = height;
         }
     }
 }

@@ -28,6 +28,12 @@ public interface FoodDetectionRepository extends MongoRepository<FoodDetection, 
     List<FoodDetection> findByDetectedFoodName(String foodName);
     
     /**
+     * Find food detections containing specific food item (case insensitive)
+     */
+    @Query("{ 'detectedFoods.name': { $regex: ?0, $options: 'i' } }")
+    List<FoodDetection> findByDetectedFoodsNameContainingIgnoreCase(String foodName);
+    
+    /**
      * Find food detections with confidence above threshold
      */
     @Query("{ 'detectedFoods.confidence': { $gte: ?0 } }")
@@ -37,6 +43,11 @@ public interface FoodDetectionRepository extends MongoRepository<FoodDetection, 
      * Find recent food detections (last N days)
      */
     List<FoodDetection> findByCreatedAtAfterOrderByCreatedAtDesc(LocalDateTime since);
+    
+    /**
+     * Find recent food detections after date
+     */
+    List<FoodDetection> findByCreatedAtAfter(LocalDateTime since);
     
     /**
      * Count detections by date range

@@ -13,6 +13,7 @@ interface DetectedFoodItem {
   name: string;
   category: string;
   estimatedWeight: string;
+  estimatedCalories: number;
   confidence: number;
   selected: boolean;
 }
@@ -58,9 +59,19 @@ export default function CalorieEstimator() {
       const response = await api.vision.detectFood(selectedFile);
       
       if (response.success) {
-        setDetectedItems(response.detectedItems || []);
+        // Map backend fields to frontend interface
+        const mappedItems = (response.detectedItems || []).map((item: any) => ({
+          name: item.name,
+          category: item.category || 'food',
+          estimatedWeight: `${item.estimatedGrams || 0}g`,
+          estimatedCalories: item.estimatedCalories || 0,
+          confidence: item.confidence,
+          selected: false
+        }));
+        
+        setDetectedItems(mappedItems);
         setAnalysisComplete(true);
-        if (response.detectedItems.length === 0) {
+        if (mappedItems.length === 0) {
           setError('No food items detected in the image. Please try a different image.');
         }
       } else {
@@ -360,9 +371,14 @@ export default function CalorieEstimator() {
                                 </div>
                               ) : (
                                 <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium text-gray-700">
-                                    {item.estimatedWeight}
-                                  </span>
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-medium text-gray-700">
+                                      {item.estimatedWeight}
+                                    </span>
+                                    <span className="text-xs text-orange-600">
+                                      {item.estimatedCalories.toFixed(1)} kcal
+                                    </span>
+                                  </div>
                                   <Button
                                     size="sm"
                                     variant="ghost"
